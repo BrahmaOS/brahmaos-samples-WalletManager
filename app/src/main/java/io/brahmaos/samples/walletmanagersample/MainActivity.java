@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Get WalletManager service.
-        //mWalletManager = (WalletManager) getSystemService("wallet");
+        mWalletManager = (WalletManager) getSystemService("wallet");
 
         mEtCreateName = findViewById(R.id.et_create_name);
         mEtCreatePassword = findViewById(R.id.et_create_password);
