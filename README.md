@@ -4,6 +4,7 @@ A sample application showing how to user WalletManager API to manage ethereum an
 
 ## Pre-requistes
 
+- Brahma OS API 1+
 - Android Studio 2.3+
 
 ## Support
