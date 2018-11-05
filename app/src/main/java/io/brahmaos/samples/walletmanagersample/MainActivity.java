@@ -21,6 +21,9 @@ public class MainActivity extends AppCompatActivity {
     private EditText mEtCreateName;
     private EditText mEtCreatePassword;
 
+    private EditText mEtDeleteAddress;
+    private Button mBtnDelete;
+
     private WalletManager mWalletManager;
     private List<WalletData> mWalletList;
 
@@ -30,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Get WalletManager service.
-        mWalletManager = (WalletManager) getSystemService("wallet");
+        //mWalletManager = (WalletManager) getSystemService("wallet");
 
         mEtCreateName = findViewById(R.id.et_create_name);
         mEtCreatePassword = findViewById(R.id.et_create_password);
@@ -50,6 +53,19 @@ public class MainActivity extends AppCompatActivity {
                             data.mnemonicStr, mEtCreatePassword.getText().toString().trim());
                     Log.d(TAG, "mnemonics are: " + mnemonics);
                 }
+            }
+        });
+
+        mEtDeleteAddress = (EditText) findViewById(R.id.et_delete_address);
+        Button mBtnDelete = (Button) findViewById(R.id.btn_delete);
+        mBtnDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                List<WalletData> ethWallets = mWalletManager.getWalletsForChainType(WalletManager.WALLET_CHAIN_TYPE_ETH);
+                Log.d(TAG,"get " + (ethWallets == null ? ethWallets.size() : "null") + "ETH wallets");
+                mWalletManager.deleteWalletByAddress(mEtDeleteAddress.getText().toString().trim());
+                Toast.makeText(MainActivity.this,
+                        "have deleted.", Toast.LENGTH_SHORT).show();
             }
         });
     }
