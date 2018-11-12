@@ -1,6 +1,5 @@
 package io.brahmaos.samples.walletmanagersample;
 
-import android.os.Process;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,7 +15,6 @@ import java.util.List;
 import brahmaos.app.WalletManager;
 import brahmaos.content.BrahmaContext;
 import brahmaos.content.WalletData;
-
 
 /**
  * In this demo ethereum wallet address 0x4029a7e31ae310479784e9ade9e3172698807341 is for testing.
@@ -224,6 +222,24 @@ public class MainActivity extends AppCompatActivity {
         mEtKncHash = (TextView) findViewById(R.id.et_knc_hash);
         mEtGasPrice = (EditText) findViewById(R.id.et_gas_price);
         mEtGasLimit = (EditText) findViewById(R.id.et_gas_limit);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                    final String ethGasPrice = mWalletManager.getEthereumGasPrice(ROPSTEN_URL);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (null == ethGasPrice || ethGasPrice.isEmpty()) {
+                                mEtGasPrice.setText("error");
+                            } else {
+                                mEtGasPrice.setText(ethGasPrice);
+                            }
+                        }
+                    });
+            }
+        }).start();
+
+
         mEtGasPrice.setText("20");
         mEtGasLimit.setText("400000");
         mBtnTransfer = (Button)findViewById(R.id.btn_transfer);
@@ -263,9 +279,9 @@ public class MainActivity extends AppCompatActivity {
                                 "0x4029a7e31ae310479784e9ade9e3172698807341",
                                 "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6","qqqqqq",
                                 "0x62461ec66ea7014833181e8e22a8e64f40de34ec", 1,
-                                new BigInteger(mEtGasPrice.getText().toString().trim()).doubleValue(),
-                                Long.valueOf(mEtGasLimit.getText().toString().trim()),
-                                "test");
+                                 new BigInteger(mEtGasPrice.getText().toString().trim()).doubleValue(),
+                                 Long.valueOf(mEtGasLimit.getText().toString().trim()),
+                                 "test");
 
                         runOnUiThread(new Runnable() {
                             @Override
