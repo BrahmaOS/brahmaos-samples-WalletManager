@@ -2,19 +2,23 @@ package io.brahmaos.samples.walletmanagersample;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.AppCompatCheckBox;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.List;
 
 import brahmaos.app.WalletManager;
 import brahmaos.content.BrahmaContext;
 import brahmaos.content.WalletData;
+import brahmaos.util.DataCryptoUtils;
 
 /**
  * In this demo ethereum wallet address 0x4029a7e31ae310479784e9ade9e3172698807341 is for testing.
@@ -29,10 +33,13 @@ public class MainActivity extends AppCompatActivity {
     private EditText mEtCreateName, mEtCreatePassword;
     private Button mBtnCreate;
 
+    private TextView mTvListAllWallets;
+    private Button mBtnListAllWallets;
+
     private EditText mEtDeleteAddress;
     private Button mBtnDelete;
 
-    private EditText mEtPrivateKey, mEtMnemonics, mEtKeyStore;
+    private EditText mEtPrivateKey, mEtMnemonics, mEtKeyStore, mEtPassword;
     private Button mBtnImport;
 
     private EditText mEtUpdateAddress, mEtOldPwd, mEtNewPwd;
@@ -44,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText mEtGasPrice, mEtGasLimit;
     private TextView mEtEtcHash, mEtKncHash;
-    private Button mBtnTransfer;
+    private Button mBtnTransfer, mBtnTransferToken;
 
     private EditText mEtEthTransHash;
     private TextView mTvEthTransaction;
@@ -53,6 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private WalletManager mWalletManager;
     private List<WalletData> mWalletList;
 
+
+    private AppCompatCheckBox mUseTestUrl;
     private static final String ROPSTEN_URL = "https://ropsten.infura.io/Gy3Csyt4bzKIGsctm3g0";
 
     @Override
@@ -68,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         mEtPrivateKey = (EditText) findViewById(R.id.et_private_key);
         mEtMnemonics = (EditText) findViewById(R.id.et_mnemonics);
         mEtKeyStore = (EditText) findViewById(R.id.et_keyStore);
+        mEtPassword = (EditText) findViewById(R.id.et_password);
 
         mEtUpdateAddress = (EditText) findViewById(R.id.et_update_address);
         mEtOldPwd = (EditText) findViewById(R.id.et_old_pwd);
@@ -102,45 +112,43 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mBtnDelete = (Button) findViewById(R.id.btn_delete);
-        mBtnDelete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                List<WalletData> ethWallets =
-                        mWalletManager.getWalletsForChainType(WalletManager.WALLET_CHAIN_TYPE_ETH);
-                Log.d(TAG,"get " + (ethWallets == null ? "null" : ethWallets.size()) + "ETH wallets");
-
-                int res = mWalletManager.deleteWalletByAddress(mEtDeleteAddress.getText().toString().trim());
-                Toast.makeText(MainActivity.this,
-                        "deleted " + (res == WalletManager.CODE_NO_ERROR ? "success" : "failed"), Toast.LENGTH_SHORT).show();
-            }
-        });
-
         mBtnImport = (Button) findViewById(R.id.btn_import);
         mBtnImport.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (null == mEtPassword.getText()|| mEtPassword.getText().toString().isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Please input the password.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         if (mEtPrivateKey.getText() != null && !mEtPrivateKey.getText().toString().isEmpty()) {
                             mWalletManager.importEthereumWallet(
                                     "importPK",
-                                    "qqqqqq",
+                                    mEtPassword.getText().toString().trim(),
                                     mEtPrivateKey.getText().toString().trim(),
                                     WalletManager.IMPORT_BY_PRIVATE_KEY);
                         } else if (mEtMnemonics.getText() != null && !mEtMnemonics.getText().toString().isEmpty()) {
                             mWalletManager.importEthereumWallet(
                                     "importMN",
-                                    "qqqqqq",
+                                    mEtPassword.getText().toString().trim(),
                                     mEtMnemonics.getText().toString().trim(),
                                     WalletManager.IMPORT_BY_MNEMONICS);
                         } else if (mEtKeyStore.getText() != null && !mEtKeyStore.getText().toString().isEmpty()) {
                             mWalletManager.importEthereumWallet(
                                     "importKS",
-                                    "qqqqqq",
+                                    mEtPassword.getText().toString().trim(),
                                     mEtKeyStore.getText().toString().trim(),
-                                    WalletManager.IMPORT_BY_MNEMONICS);
+                                    WalletManager.IMPORT_BY_KEYSTORE);
+                        } else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(MainActivity.this, "Please input the data.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                            return;
                         }
                         runOnUiThread(new Runnable() {
                             @Override
@@ -160,8 +168,6 @@ public class MainActivity extends AppCompatActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        WalletData walletData = mWalletManager.getWalletDataByAddress(
-                                mEtUpdateAddress.getText().toString().trim());
                         final int nameResult = mWalletManager.updateWalletNameForAddress("update" + System.currentTimeMillis(),
                                 mEtUpdateAddress.getText().toString().trim());
                         final int passwordResult = mWalletManager.updateEthereumWalletPassword(
@@ -179,6 +185,62 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mTvListAllWallets = (TextView) findViewById(R.id.tv_list_all);
+        mBtnListAllWallets = (Button) findViewById(R.id.btn_list_all);
+        mBtnListAllWallets.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mTvListAllWallets.setText("");
+                List<WalletData> allWallets = mWalletManager.getAllWallets();
+                if (null == allWallets || allWallets.isEmpty()) {
+                    mTvListAllWallets.setText("has no wallet");
+                } else {
+                    for (WalletData wallet : allWallets) {
+                        mTvListAllWallets.setText(mTvListAllWallets.getText().toString()
+                                + wallet.address + ";\n");
+                    }
+                }
+
+                List<WalletData> ethWallets =
+                        mWalletManager.getWalletsForChainType(WalletManager.WALLET_CHAIN_TYPE_ETH);
+                Log.d(TAG,"get " + (ethWallets == null ? "null" : ethWallets.size()) + "ETH wallets");
+            }
+        });
+
+        mBtnDelete = (Button) findViewById(R.id.btn_delete);
+        mBtnDelete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int res = mWalletManager.deleteWalletByAddress(mEtDeleteAddress.getText().toString().trim());
+                Toast.makeText(MainActivity.this,
+                        "deleted " + (res == WalletManager.CODE_NO_ERROR ? "success" : "failed"), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        mUseTestUrl = (AppCompatCheckBox) findViewById(R.id.checkbox_use_test);
+        mUseTestUrl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final String ethGasPrice = mWalletManager.getEthereumGasPrice(
+                                mUseTestUrl.isChecked() ? ROPSTEN_URL : null);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (null == ethGasPrice || ethGasPrice.isEmpty()) {
+                                    mEtGasPrice.setText("error");
+                                } else {
+                                    mEtGasPrice.setText(ethGasPrice);
+                                }
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+
         mEtBlanceAddress = (EditText) findViewById(R.id.et_blance_address);
         mEtTokenAddress = (EditText) findViewById(R.id.et_token_address);
         mTvBlance = (TextView) findViewById(R.id.tv_blance);
@@ -186,34 +248,22 @@ public class MainActivity extends AppCompatActivity {
         mBtnGetBlance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (null == mEtBlanceAddress.getText() ||
-                        null == mEtBlanceAddress.getText().toString() ||
-                        mEtBlanceAddress.getText().toString().isEmpty()) {//Just for test
-                    //mainneturl brm
-                    mWalletManager.getEthereumBalanceByAddress(
-                            "0x4029a7e31ae310479784e9ade9e3172698807341",
-                            "0xd7732e3783b0047aa251928960063f863ad022d8",
-                            new GetETHBlanceListener("BRM"));
-                    //ropstenUrl eth
-                    mWalletManager.getEthereumBalanceByAddress(
-                            ROPSTEN_URL, "0x4029a7e31ae310479784e9ade9e3172698807341",
-                            null,
-                            new GetETHBlanceListener("ETH test"));
-
-                    //ropstenUrl knc
-                    mWalletManager.getEthereumBalanceByAddress(
-                            ROPSTEN_URL,
-                            "0x4029a7e31ae310479784e9ade9e3172698807341",
-                            "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6",
-                            new GetETHBlanceListener("KNC test"));
-                } else {
-                    String tokenAddr = mEtTokenAddress.getText() == null ? null : (mEtTokenAddress.getText().toString());
-                    mWalletManager.getEthereumBalanceByAddress(
-                            null,
+                mTvBlance.setText("");
+                //just for test
+                String tokenAddr = mEtTokenAddress.getText() == null ? null : (mEtTokenAddress.getText().toString());
+                if (tokenAddr != null) {
+                    if ("KNC".equalsIgnoreCase(tokenAddr)) {
+                        tokenAddr = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6";
+                    }
+                    if ("BRM".equalsIgnoreCase(tokenAddr)) {
+                        tokenAddr = "0xd7732e3783b0047aa251928960063f863ad022d8";
+                    }
+                }
+                mWalletManager.getEthereumBalanceByAddress(
+                        mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
                         mEtBlanceAddress.getText().toString(),
                         tokenAddr,
                         new GetETHBlanceListener(""));
-                }
 
             }
         });
@@ -222,10 +272,12 @@ public class MainActivity extends AppCompatActivity {
         mEtKncHash = (TextView) findViewById(R.id.et_knc_hash);
         mEtGasPrice = (EditText) findViewById(R.id.et_gas_price);
         mEtGasLimit = (EditText) findViewById(R.id.et_gas_limit);
+        //get gas price and update the edit text
         new Thread(new Runnable() {
             @Override
             public void run() {
-                    final String ethGasPrice = mWalletManager.getEthereumGasPrice(ROPSTEN_URL);
+                    final String ethGasPrice = mWalletManager.getEthereumGasPrice(
+                            mUseTestUrl.isChecked() ? ROPSTEN_URL : null);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -246,16 +298,21 @@ public class MainActivity extends AppCompatActivity {
         mBtnTransfer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mBtnTransfer.setEnabled(false);
+                mBtnTransferToken.setEnabled(false);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         //ETH ropsten
-                        final String etcHash = mWalletManager.transferEthereum(ROPSTEN_URL,
+                        final String etcHash = mWalletManager.transferEthereum(
+                                mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
                                 "0x4029a7e31ae310479784e9ade9e3172698807341",
-                                "","qqqqqq",
-                                "0x62461ec66ea7014833181e8e22a8e64f40de34ec", 0.1,
-                                new BigInteger(mEtGasPrice.getText().toString().trim()).doubleValue(),
-                                Long.valueOf(mEtGasLimit.getText().toString().trim()),
+                                "",
+                                "qqqqqq",
+                                "0x62461ec66ea7014833181e8e22a8e64f40de34ec",
+                                0.1,
+                                 new BigInteger(mEtGasPrice.getText().toString().trim()).doubleValue(),
+                                 Long.valueOf(mEtGasLimit.getText().toString().trim()),
                                 "test");
 
                         runOnUiThread(new Runnable() {
@@ -266,22 +323,35 @@ public class MainActivity extends AppCompatActivity {
                                 } else {
                                     mEtEtcHash.setText(etcHash);
                                 }
+                                mBtnTransferToken.setEnabled(true);
+                                mBtnTransfer.setEnabled(true);
                             }
                         });
                     }
                 }).start();
+            }
+        });
 
+        mBtnTransferToken = (Button) findViewById(R.id.btn_transfer_token);
+        mBtnTransferToken.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mBtnTransferToken.setEnabled(false);
+                mBtnTransfer.setEnabled(false);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         //KNC ropsten
-                        final String kncHash = mWalletManager.transferEthereum(ROPSTEN_URL,
+                        final String kncHash = mWalletManager.transferEthereum(
+                                mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
                                 "0x4029a7e31ae310479784e9ade9e3172698807341",
-                                "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6","qqqqqq",
-                                "0x62461ec66ea7014833181e8e22a8e64f40de34ec", 1,
+                                "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6",
+                                "qqqqqq",
+                                "0x62461ec66ea7014833181e8e22a8e64f40de34ec",
+                                1,
                                  new BigInteger(mEtGasPrice.getText().toString().trim()).doubleValue(),
                                  Long.valueOf(mEtGasLimit.getText().toString().trim()),
-                                 "test");
+                                "test");
 
                         runOnUiThread(new Runnable() {
                             @Override
@@ -291,13 +361,14 @@ public class MainActivity extends AppCompatActivity {
                                 } else {
                                     mEtKncHash.setText(kncHash);
                                 }
+                                mBtnTransfer.setEnabled(true);
+                                mBtnTransferToken.setEnabled(true);
                             }
                         });
                     }
                 }).start();
             }
         });
-
 
         mEtEthTransHash = (EditText) findViewById(R.id.et_trans_hash);
         mTvEthTransaction = (TextView) findViewById(R.id.tv_transaction);
@@ -311,6 +382,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             final String result = mWalletManager.getEthereumTransactionByHash(
+                                    mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
                                     mEtEthTransHash.getText().toString().trim());
                             runOnUiThread(new Runnable() {
                                 @Override
@@ -339,7 +411,12 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onETHBlanceGetError() {
             Log.d(TAG, "onETHBlanceGetError---" + mType);
-            mTvBlance.setText("error");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mTvBlance.setText(mTvBlance.getText().toString() + (mType + " error; "));
+                }
+            });
         }
 
         @Override
