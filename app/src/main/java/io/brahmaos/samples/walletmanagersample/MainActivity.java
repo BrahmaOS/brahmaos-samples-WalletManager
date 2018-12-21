@@ -184,7 +184,6 @@ public class MainActivity extends AppCompatActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        mWalletList = mWalletManager.createDefaultWallet("111","1111","111111",false);
                         mWalletList = mWalletManager.createWallet(
                                 mEtCreateName.getText().toString().trim(),
                                 mEtCreatePassword.getText().toString().trim());
@@ -300,7 +299,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 List<WalletData> ethWallets =
-                        mWalletManager.getWalletsForChainType(WalletManager.WALLET_CHAIN_TYPE_BTC);
+                        mWalletManager.getWalletsForChainType(WalletManager.WALLET_CHAIN_TYPE_ETH);
                 Log.d(TAG,"get " + (ethWallets == null ? "null" : ethWallets.size()) + "ETH wallets");
             }
         });
