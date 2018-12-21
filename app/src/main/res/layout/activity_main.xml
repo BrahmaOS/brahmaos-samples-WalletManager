@@ -322,6 +322,21 @@
                     android:layout_height="wrap_content" />
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Wallet Password:" />
+
+                <EditText
+                    android:id="@+id/et_delete_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
             <Button
                 android:id="@+id/btn_delete"
                 android:layout_width="180dp"
@@ -337,6 +352,488 @@
             android:layout_marginTop="20dp"
             android:background="#000000" />
 
+        <!--Get BTC Wallet Download Info-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:text="Get BTC Download Information"
+                android:textAlignment="center"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Wallet Address:" />
+
+                <EditText
+                    android:id="@+id/et_btc_download_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Done Downloaded:" />
+
+                <TextView
+                    android:id="@+id/tv_btc_downloaded"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Last Block Seen Height:" />
+
+                <TextView
+                    android:id="@+id/tv_btc_last_block_height"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Laset Block Seen Time:" />
+
+                <TextView
+                    android:id="@+id/tv_btc_last_block_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_get_btc_download_info"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Get BTC Download Info" />
+        </LinearLayout>
+
+        <!--Get BTC Wallet Info-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:text="Get BTC Wallet Information"
+                android:textAlignment="center"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Wallet Address:" />
+
+                <EditText
+                    android:id="@+id/et_btc_balance_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Curr Balance:" />
+
+                <TextView
+                    android:id="@+id/tv_btc_balance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Private Keys Count:" />
+
+                <TextView
+                    android:id="@+id/tv_btc_pv_keys"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Current Receive Addr:" />
+
+                <TextView
+                    android:id="@+id/tv_btc_curr_rece_addr"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_get_btc_wallet_info"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Get BTC Wallet Info" />
+        </LinearLayout>
+
+        <!--Transfer Bitcoin-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:text="Transfer Bitcoin"
+                android:textAlignment="center"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="From:" />
+
+                <EditText
+                    android:id="@+id/et_from_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="To:" />
+
+                <EditText
+                    android:id="@+id/et_to_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Amount:" />
+
+                <EditText
+                    android:id="@+id/et_btc_amount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Fee:" />
+
+                <EditText
+                    android:id="@+id/et_btc_fee"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:layout_width="45dp"
+                    android:layout_height="wrap_content"
+                    android:text="sat/b" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Password:" />
+
+                <EditText
+                    android:id="@+id/et_btc_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="BTC transaction:" />
+
+                <TextView
+                    android:id="@+id/tv_btc_hash"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_btc_transfer"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Transfer Bitcoin" />
+        </LinearLayout>
+
+        <!--Get Transfer Pending Amount-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:text="Get transfer progress"
+                android:textAlignment="center"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Main Address:" />
+
+                <EditText
+                    android:id="@+id/et_tx_progress_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pending Tx Amount:" />
+
+                <TextView
+                    android:id="@+id/tv_btc_pending_amount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_btc_transfer_progress"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Get Transfer Pending Amount" />
+        </LinearLayout>
+
+        <!--Get Confirmed Blocks-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:text="Get Confirmed Blocks"
+                android:textAlignment="center"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Transaction Hash:" />
+
+                <EditText
+                    android:id="@+id/et_tx_hash"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Confirmed Blocks:" />
+
+                <TextView
+                    android:id="@+id/tv_btc_confirm_blocks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_btc_transfer_confirm"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Get Confirmed Blocks" />
+        </LinearLayout>
+
+        <!--Transactions Details-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:text="Transactions Details"
+                android:textAlignment="center"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="Main Address:" />
+
+                <EditText
+                    android:id="@+id/et_tx_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="120dp"
+                    android:layout_height="wrap_content"
+                    android:text="BTC transactions:" />
+
+                <TextView
+                    android:id="@+id/tv_btc_transaction"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_btc_transaction"
+                android:layout_width="180dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Get Bitcoin Transactions Details" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_marginTop="20dp"
+            android:background="#000000" />
+
         <android.support.v7.widget.AppCompatCheckBox
             android:id="@+id/checkbox_use_test"
             android:layout_width="wrap_content"
@@ -344,7 +841,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="5dp"
-            android:text="Use Ropsten test network for bellow transactions:"
+            android:text="[Ethereum Wallet] Use Ropsten test network for bellow transactions:"
             android:textColor="#FF0000" />
 
         <!--Get Balance-->
@@ -375,7 +872,7 @@
                     android:text="Wallet Address:" />
 
                 <EditText
-                    android:id="@+id/et_blance_address"
+                    android:id="@+id/et_balance_address"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
             </LinearLayout>
@@ -405,13 +902,13 @@
                     android:text="Curr Balance:" />
 
                 <TextView
-                    android:id="@+id/tv_blance"
+                    android:id="@+id/tv_balance"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
             </LinearLayout>
 
             <Button
-                android:id="@+id/btn_get_blance"
+                android:id="@+id/btn_get_balance"
                 android:layout_width="180dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
@@ -522,7 +1019,7 @@
                 android:text="Transfer Token" />
         </LinearLayout>
 
-        <!--Get Transferaction Details-->
+        <!--Get Transaction Details-->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -536,7 +1033,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="12dp"
-                android:text="Get Transferaction Details"
+                android:text="Get Transaction Details"
                 android:textAlignment="center"
                 android:textStyle="bold" />
 
@@ -576,7 +1073,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="8dp"
-                android:text="Get Transferaction Details" />
+                android:text="Get Transaction Details" />
         </LinearLayout>
 
     </LinearLayout>

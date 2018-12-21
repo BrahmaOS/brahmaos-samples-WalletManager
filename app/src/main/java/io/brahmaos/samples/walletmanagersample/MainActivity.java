@@ -1,5 +1,9 @@
 package io.brahmaos.samples.walletmanagersample;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.AppCompatCheckBox;
@@ -11,14 +15,28 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 import java.io.File;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import brahmaos.app.WalletManager;
 import brahmaos.content.BrahmaContext;
+import brahmaos.content.BrahmaIntent;
+import brahmaos.content.TransactionDetails;
 import brahmaos.content.WalletData;
 import brahmaos.util.DataCryptoUtils;
+
+//import com.fasterxml.jackson.databind.ObjectMapper;
+//import org.web3j.protocol.ObjectMapperFactory;
+//import org.web3j.crypto.CipherException;
+//import org.web3j.crypto.Credentials;
+//import org.web3j.crypto.ECKeyPair;
+//import org.web3j.crypto.Wallet;
+//import org.web3j.crypto.WalletFile;
 
 /**
  * In this demo ethereum wallet address 0x4029a7e31ae310479784e9ade9e3172698807341 is for testing.
@@ -37,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mBtnListAllWallets;
 
     private EditText mEtDeleteAddress;
+    private EditText mEtDeletePassword;
     private Button mBtnDelete;
 
     private EditText mEtPrivateKey, mEtMnemonics, mEtKeyStore, mEtPassword;
@@ -45,9 +64,9 @@ public class MainActivity extends AppCompatActivity {
     private EditText mEtUpdateAddress, mEtOldPwd, mEtNewPwd;
     private Button mBtnUpdateWallet;
 
-    private EditText mEtBlanceAddress, mEtTokenAddress;
-    private TextView mTvBlance;
-    private Button mBtnGetBlance;
+    private EditText mEtBalanceAddress, mEtTokenAddress;
+    private TextView mTvBalance;
+    private Button mBtnGetBalance;
 
     private EditText mEtGasPrice, mEtGasLimit;
     private TextView mEtEtcHash, mEtKncHash;
@@ -57,12 +76,77 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvEthTransaction;
     private Button mBtnEthTransaction;
 
+
+    private EditText mEtBtcDownloadAddress;
+    private TextView mTvBtcDoneDownloaded, mTvLastBlockSeenHeight, mTvLastBlockSeenTime;
+    private Button mBtnBtcGetDownloadInfo;
+
+    private EditText mEtBtcInfoAddress;
+    private TextView mTvBtcBalance, mTvBtcPVKeysCount, mTvBtcCurrReceAddr;
+    private Button mBtnGetBtcInfo;
+
+    private EditText mEtFromAddress, mEtToAddress, mEtBtcFee, mEtBtcAmount, mEtBtcPassword;
+    private TextView mTvBtcHash;
+    private Button mBtnBtcTransfer;
+    private EditText mEtBtcTxConfirmHash;
+    private TextView mTvBtcConfirmedBlocks;
+    private Button mBtnBtcTransferConfirm;
+
+    private EditText mEtBtcTxProgressAddress;
+    private TextView mTvBtcPendingTxAmount;
+    private Button mBtnBtcTxProgress;
+
+    private EditText mEtTxAddress;
+    private TextView mTvBtcTransaction;
+    private Button mBtnBtcTransaction;
+
     private WalletManager mWalletManager;
     private List<WalletData> mWalletList;
 
-
     private AppCompatCheckBox mUseTestUrl;
     private static final String ROPSTEN_URL = "https://ropsten.infura.io/Gy3Csyt4bzKIGsctm3g0";
+
+    private Map<String, Integer> mMapTxConfirmBlocks = new HashMap<>();//<hash, blocks>
+
+    BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (null == intent) {
+                Log.d(TAG, "receive null intent.");
+                return;
+            }
+            String action = intent.getAction();
+            Log.d(TAG, "received: " + action);
+            if (BrahmaIntent.ACTION_CHAIN_DOWNLOAD_STARTED.equals(action)) {
+                String fileName = intent.getStringExtra(BrahmaIntent.EXTRA_WALLET_FILE_NAME);
+                String peer = intent.getStringExtra(BrahmaIntent.EXTRA_PEER);
+                int blocksLeft = intent.getIntExtra(BrahmaIntent.EXTRA_BLOCKS_LEFT, 0);
+                Log.d(TAG, fileName + ":\n" + peer + ", " + blocksLeft);
+
+            }
+
+            if (BrahmaIntent.ACTION_CHAIN_DOWNLOAD_PROGRESS.equals(action)) {
+                String fileName = intent.getStringExtra(BrahmaIntent.EXTRA_WALLET_FILE_NAME);
+                double pct = intent.getDoubleExtra(BrahmaIntent.EXTRA_PCT, 0);
+                int blocksSoFar = intent.getIntExtra(BrahmaIntent.EXTRA_BLOCKS_SO_FAR, 0);
+                String date = intent.getStringExtra(BrahmaIntent.EXTRA_DATE_STRING);
+                Log.d(TAG, fileName + ":\n" + pct + ", " + blocksSoFar + ", " + date);
+            }
+
+            if(BrahmaIntent.ACTION_START_DOWNLOAD.equals(action)) {
+                String fileName = intent.getStringExtra(BrahmaIntent.EXTRA_WALLET_FILE_NAME);
+                int blocks = intent.getIntExtra(BrahmaIntent.EXTRA_BLOCKS, 0);
+                Log.d(TAG, fileName + ":\n" + blocks);
+
+            }
+            if (BrahmaIntent.ACTION_TRANSACTION_CONFIDENCE_CHANGED.equals(action)) {
+                Log.d(TAG, "hash: " + intent.getStringExtra(BrahmaIntent.EXTRA_TRANSACTION_HASH)
+                        + ", depth: " + intent.getIntExtra(BrahmaIntent.EXTRA_DEPTH_IN_BLOCKS, 0));
+                mMapTxConfirmBlocks.put(intent.getStringExtra(BrahmaIntent.EXTRA_TRANSACTION_HASH),
+                        intent.getIntExtra(BrahmaIntent.EXTRA_DEPTH_IN_BLOCKS, 0));
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
         mEtCreateName = (EditText) findViewById(R.id.et_create_name);
         mEtCreatePassword = (EditText) findViewById(R.id.et_create_password);
         mEtDeleteAddress = (EditText) findViewById(R.id.et_delete_address);
+        mEtDeletePassword = (EditText) findViewById(R.id.et_delete_password);
 
         mEtPrivateKey = (EditText) findViewById(R.id.et_private_key);
         mEtMnemonics = (EditText) findViewById(R.id.et_mnemonics);
@@ -83,6 +168,15 @@ public class MainActivity extends AppCompatActivity {
         mEtOldPwd = (EditText) findViewById(R.id.et_old_pwd);
         mEtNewPwd = (EditText) findViewById(R.id.et_new_pwd);
 
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(BrahmaIntent.ACTION_WALLETAPPKIT_SETUP_COMPLETE);
+        filter.addAction(BrahmaIntent.ACTION_CHAIN_DOWNLOAD_STARTED);
+        filter.addAction(BrahmaIntent.ACTION_CHAIN_DOWNLOAD_PROGRESS);
+        filter.addAction(BrahmaIntent.ACTION_START_DOWNLOAD);
+        filter.addAction(BrahmaIntent.ACTION_DONE_DOWNLOAD);
+        filter.addAction(BrahmaIntent.ACTION_TRANSACTION_CONFIDENCE_CHANGED);
+        registerReceiver(mReceiver, filter);
+
         mBtnCreate = (Button) findViewById(R.id.btn_create);
         mBtnCreate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        mWalletList = mWalletManager.createDefaultWallet("111","1111","111111",false);
                         mWalletList = mWalletManager.createWallet(
                                 mEtCreateName.getText().toString().trim(),
                                 mEtCreatePassword.getText().toString().trim());
@@ -99,11 +194,6 @@ public class MainActivity extends AppCompatActivity {
                                 if (mWalletList != null) {
                                     Toast.makeText(MainActivity.this,
                                             "have created " + mWalletList.size() + " wallsts.", Toast.LENGTH_SHORT).show();
-                                }
-                                for (WalletData data : mWalletList) {
-                                    String mnemonics = mWalletManager.decryptMnemonics(
-                                            data.mnemonicStr, mEtCreatePassword.getText().toString().trim());
-                                    Log.d(TAG, "mnemonics are: " + mnemonics);
                                 }
                             }
                         });
@@ -131,7 +221,13 @@ public class MainActivity extends AppCompatActivity {
                                     WalletManager.IMPORT_BY_PRIVATE_KEY);
                         } else if (mEtMnemonics.getText() != null && !mEtMnemonics.getText().toString().isEmpty()) {
                             mWalletManager.importEthereumWallet(
-                                    "importMN",
+                                    "importMN_ETH",
+                                    mEtPassword.getText().toString().trim(),
+                                    mEtMnemonics.getText().toString().trim(),
+                                    WalletManager.IMPORT_BY_MNEMONICS);
+                            //For bitcoin only support import according mnemonics for now.
+                            mWalletManager.importBitcoinWallet(
+                                    "importMN_BTC",
                                     mEtPassword.getText().toString().trim(),
                                     mEtMnemonics.getText().toString().trim(),
                                     WalletManager.IMPORT_BY_MNEMONICS);
@@ -165,18 +261,20 @@ public class MainActivity extends AppCompatActivity {
         mBtnUpdateWallet.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mBtnUpdateWallet.setEnabled(false);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         final int nameResult = mWalletManager.updateWalletNameForAddress("update" + System.currentTimeMillis(),
                                 mEtUpdateAddress.getText().toString().trim());
-                        final int passwordResult = mWalletManager.updateEthereumWalletPassword(
+                        final int passwordResult = mWalletManager.updateWalletPasswordForAddress(
                                 mEtUpdateAddress.getText().toString().trim(),
                                 mEtOldPwd.getText().toString().trim(),
                                 mEtNewPwd.getText().toString().trim());
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
+                                mBtnUpdateWallet.setEnabled(true);
                                 Toast.makeText(MainActivity.this,nameResult + "; " + passwordResult, Toast.LENGTH_SHORT).show();
                             }
                         });
@@ -195,14 +293,14 @@ public class MainActivity extends AppCompatActivity {
                 if (null == allWallets || allWallets.isEmpty()) {
                     mTvListAllWallets.setText("has no wallet");
                 } else {
-                    for (WalletData wallet : allWallets) {
+                    for (final WalletData wallet : allWallets) {
                         mTvListAllWallets.setText(mTvListAllWallets.getText().toString()
                                 + wallet.address + ";\n");
                     }
                 }
 
                 List<WalletData> ethWallets =
-                        mWalletManager.getWalletsForChainType(WalletManager.WALLET_CHAIN_TYPE_ETH);
+                        mWalletManager.getWalletsForChainType(WalletManager.WALLET_CHAIN_TYPE_BTC);
                 Log.d(TAG,"get " + (ethWallets == null ? "null" : ethWallets.size()) + "ETH wallets");
             }
         });
@@ -211,12 +309,25 @@ public class MainActivity extends AppCompatActivity {
         mBtnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int res = mWalletManager.deleteWalletByAddress(mEtDeleteAddress.getText().toString().trim());
-                Toast.makeText(MainActivity.this,
-                        "deleted " + (res == WalletManager.CODE_NO_ERROR ? "success" : "failed"), Toast.LENGTH_SHORT).show();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final int res = mWalletManager.deleteWalletByAddress(
+                                mEtDeleteAddress.getText().toString().trim(),
+                                mEtDeletePassword.getText().toString());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(MainActivity.this,
+                                        "deleted " + (res == WalletManager.CODE_NO_ERROR ? "success" : "failed"), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }).start();
             }
         });
 
+        /**======================== Below for Ethereum Wallet ========================**/
         mUseTestUrl = (AppCompatCheckBox) findViewById(R.id.checkbox_use_test);
         mUseTestUrl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -241,29 +352,41 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mEtBlanceAddress = (EditText) findViewById(R.id.et_blance_address);
+        mEtBalanceAddress = (EditText) findViewById(R.id.et_balance_address);
         mEtTokenAddress = (EditText) findViewById(R.id.et_token_address);
-        mTvBlance = (TextView) findViewById(R.id.tv_blance);
-        mBtnGetBlance = (Button) findViewById(R.id.btn_get_blance);
-        mBtnGetBlance.setOnClickListener(new View.OnClickListener() {
+        mTvBalance = (TextView) findViewById(R.id.tv_balance);
+        mBtnGetBalance = (Button) findViewById(R.id.btn_get_balance);
+        mBtnGetBalance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mTvBlance.setText("");
+                mTvBalance.setText("");
                 //just for test
-                String tokenAddr = mEtTokenAddress.getText() == null ? null : (mEtTokenAddress.getText().toString());
-                if (tokenAddr != null) {
-                    if ("KNC".equalsIgnoreCase(tokenAddr)) {
-                        tokenAddr = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6";
+                final String tokenAddr = mEtTokenAddress.getText() == null ? null : (mEtTokenAddress.getText().toString());
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String token = tokenAddr;
+                        if (tokenAddr != null) {
+                            if ("KNC".equalsIgnoreCase(tokenAddr)) {
+                                token = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6";
+                            }
+                            if ("BRM".equalsIgnoreCase(tokenAddr)) {
+                                token = "0xd7732e3783b0047aa251928960063f863ad022d8";
+                            }
+                        }
+                        final String balance = mWalletManager.getEthereumBalanceStringByAddress(
+                                mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
+                                mEtBalanceAddress.getText().toString(),
+                                token);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mTvBalance.setText("" + balance);
+                            }
+                        });
                     }
-                    if ("BRM".equalsIgnoreCase(tokenAddr)) {
-                        tokenAddr = "0xd7732e3783b0047aa251928960063f863ad022d8";
-                    }
-                }
-                mWalletManager.getEthereumBalanceByAddress(
-                        mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
-                        mEtBlanceAddress.getText().toString(),
-                        tokenAddr,
-                        new GetETHBlanceListener(""));
+                }).start();
 
             }
         });
@@ -399,36 +522,154 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        /**======================== Below for Bitcoin Wallet ========================**/
+        mEtBtcDownloadAddress = (EditText) findViewById(R.id.et_btc_download_address);
+        mTvBtcDoneDownloaded = (TextView) findViewById(R.id.tv_btc_downloaded);
+        mTvLastBlockSeenHeight = (TextView) findViewById(R.id.tv_btc_last_block_height);
+        mTvLastBlockSeenTime = (TextView) findViewById(R.id.tv_btc_last_block_time);
+        mBtnBtcGetDownloadInfo = (Button) findViewById(R.id.btn_get_btc_download_info);
+        mBtnBtcGetDownloadInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String address = mEtBtcDownloadAddress.getText().toString();
+                if (null == address || address.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "address is empty! Please check!", Toast.LENGTH_SHORT).show();
+                }
+                mTvBtcDoneDownloaded.setText(mWalletManager.checkBitcoinDoneDownloaded(address)?"true":"false");
+                mTvLastBlockSeenHeight.setText("" + mWalletManager.getBitcoinLastBlockSeenHeight(address));
+                mTvLastBlockSeenTime.setText(mWalletManager.getBitcoinLastBlockSeenTime(address));
+            }
+        });
+
+
+        mEtBtcInfoAddress = (EditText) findViewById(R.id.et_btc_balance_address);
+        mTvBtcBalance = (TextView) findViewById(R.id.tv_btc_balance);
+        mTvBtcPVKeysCount = (TextView) findViewById(R.id.tv_btc_pv_keys);
+        mTvBtcCurrReceAddr = (TextView) findViewById(R.id.tv_btc_curr_rece_addr);
+        mBtnGetBtcInfo = (Button) findViewById(R.id.btn_get_btc_wallet_info);
+        mBtnGetBtcInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final String address = mEtBtcInfoAddress.getText() ==
+                        null ? null : mEtBtcInfoAddress.getText().toString().trim();
+                if (address != null && !address.isEmpty()) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            final long result = mWalletManager.getBitcoinBalance(address);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mTvBtcBalance.setText("" + result);
+                                }
+                            });
+                        }
+                    }).start();
+
+                    mTvBtcPVKeysCount.setText("" + mWalletManager.getBitcoinPrivateKeysCount(address));
+                    mTvBtcCurrReceAddr.setText("" + mWalletManager.getBitcoinCurrentReceiveAddress(address));
+                }
+            }
+        });
+
+        mEtFromAddress = (EditText) findViewById(R.id.et_from_address);
+        mEtToAddress = (EditText) findViewById(R.id.et_to_address);
+        mEtBtcAmount = (EditText) findViewById(R.id.et_btc_amount);
+        mEtBtcFee = (EditText) findViewById(R.id.et_btc_fee);
+        mEtBtcFee.setText("50");
+        mEtBtcPassword = (EditText) findViewById(R.id.et_btc_password);
+        mTvBtcHash = (TextView) findViewById(R.id.tv_btc_hash);
+        mBtnBtcTransfer = (Button) findViewById(R.id.btn_btc_transfer);
+        mBtnBtcTransfer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final String fromAddress = mEtFromAddress.getText() ==
+                        null ? null : mEtFromAddress.getText().toString().trim();
+                final String toAddress = mEtToAddress.getText() ==
+                        null ? null : mEtToAddress.getText().toString().trim();
+                final String password = mEtBtcPassword.getText() ==
+                        null ? null : mEtBtcPassword.getText().toString().trim();
+                final String amount = mEtBtcAmount.getText() ==
+                        null ? null : mEtBtcAmount.getText().toString().trim();
+                if (fromAddress != null && !fromAddress.isEmpty() &&
+                        toAddress != null && !toAddress.isEmpty() &&
+                        password != null && !password.isEmpty()) {
+
+                    mBtnBtcTransfer.setEnabled(false);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            final String result = mWalletManager.transferBitcoin(fromAddress, toAddress, password,
+                                    Double.valueOf(amount),
+                                    Long.valueOf(mEtBtcFee.getText().toString().trim()), "");
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mBtnBtcTransfer.setEnabled(true);
+                                    mTvBtcHash.setText("" + result);
+                                }
+                            });
+                        }
+                    }).start();
+
+                }
+            }
+        });
+
+        mEtBtcTxProgressAddress = (EditText) findViewById(R.id.et_tx_progress_address);
+        mTvBtcPendingTxAmount = (TextView) findViewById(R.id.tv_btc_pending_amount);
+        mBtnBtcTxProgress = (Button) findViewById(R.id.btn_btc_transfer_progress);
+        mBtnBtcTxProgress.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mTvBtcPendingTxAmount.setText("");
+                String address = mEtBtcTxProgressAddress.getText() ==
+                        null ? null : mEtBtcTxProgressAddress.getText().toString().trim();
+                if (address != null && !address.isEmpty()) {
+                    mTvBtcPendingTxAmount.setText("" + mWalletManager.getBitcoinPendingTxAmount(address));
+                }
+            }
+        });
+
+        mEtBtcTxConfirmHash = (EditText) findViewById(R.id.et_tx_hash);
+        mTvBtcConfirmedBlocks = (TextView) findViewById(R.id.tv_btc_confirm_blocks);
+        mBtnBtcTransferConfirm = (Button) findViewById(R.id.btn_btc_transfer_confirm);
+        mBtnBtcTransferConfirm.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mTvBtcConfirmedBlocks.setText(
+                        mMapTxConfirmBlocks.containsKey(mEtBtcTxConfirmHash.getText().toString()) ? ("" +
+                                mMapTxConfirmBlocks.get(mEtBtcTxConfirmHash.getText().toString())) : "No Information");
+            }
+        });
+
+        mEtTxAddress = (EditText) findViewById(R.id.et_tx_address);
+        mTvBtcTransaction = (TextView) findViewById(R.id.tv_btc_transaction);
+        mBtnBtcTransaction = (Button) findViewById(R.id.btn_btc_transaction);
+        mBtnBtcTransaction.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mTvBtcTransaction.setText("");
+                List<TransactionDetails> txListDetails =
+                        mWalletManager.getBitcoinTransactionsByTime(mEtTxAddress.getText().toString());
+                if (txListDetails != null && txListDetails.size() > 0) {
+                    mTvBtcTransaction.setText("" + txListDetails.size() + "\n\n");
+                    for (TransactionDetails txDetails : txListDetails) {
+                        mTvBtcTransaction.setText(mTvBtcTransaction.getText() + txDetails.toString() + "\n\n");
+                    }
+                } else {
+                    mTvBtcTransaction.setText("null");
+                }
+            }
+        });
+
     }
 
-    private class GetETHBlanceListener implements WalletManager.OnETHBlanceGetListener {
-        private String mType;
-        public GetETHBlanceListener(String type) {
-            Log.d(TAG, "listener " + type);
-            mType = type;
-        }
 
-        @Override
-        public void onETHBlanceGetError() {
-            Log.d(TAG, "onETHBlanceGetError---" + mType);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mTvBlance.setText(mTvBlance.getText().toString() + (mType + " error; "));
-                }
-            });
-        }
-
-        @Override
-        public void onETHBlanceGetSuccess(String s) {
-            final String text =((null == s || s.isEmpty())?"empty":s);
-            Log.d(TAG, "onETHBlanceGetSuccess---" + mType + ": " + text);
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mTvBlance.setText(mTvBlance.getText().toString() + (mType + " " + text + "; "));
-                }
-            });
-        }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
     }
 }
