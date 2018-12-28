@@ -139,6 +139,14 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, fileName + ":\n" + blocks);
 
             }
+            if (BrahmaIntent.ACTION_DONE_DOWNLOAD.equals(action)) {
+                String fileName = intent.getStringExtra(BrahmaIntent.EXTRA_WALLET_FILE_NAME);
+                Log.d(TAG, fileName + " done downloaded.");
+            }
+
+            if (BrahmaIntent.ACTION_TRANSACTION_BROADCAST_COMPLETE.equals(action)) {
+                Log.d(TAG, "hash: " + intent.getStringExtra(BrahmaIntent.EXTRA_TRANSACTION_HASH));
+            }
             if (BrahmaIntent.ACTION_TRANSACTION_CONFIDENCE_CHANGED.equals(action)) {
                 Log.d(TAG, "hash: " + intent.getStringExtra(BrahmaIntent.EXTRA_TRANSACTION_HASH)
                         + ", depth: " + intent.getIntExtra(BrahmaIntent.EXTRA_DEPTH_IN_BLOCKS, 0));
@@ -174,6 +182,8 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(BrahmaIntent.ACTION_CHAIN_DOWNLOAD_PROGRESS);
         filter.addAction(BrahmaIntent.ACTION_START_DOWNLOAD);
         filter.addAction(BrahmaIntent.ACTION_DONE_DOWNLOAD);
+
+        filter.addAction(BrahmaIntent.ACTION_TRANSACTION_BROADCAST_COMPLETE);
         filter.addAction(BrahmaIntent.ACTION_TRANSACTION_CONFIDENCE_CHANGED);
         registerReceiver(mReceiver, filter);
 
@@ -300,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
 
                 List<WalletData> ethWallets =
                         mWalletManager.getWalletsForChainType(WalletManager.WALLET_CHAIN_TYPE_ETH);
-                Log.d(TAG,"get " + (ethWallets == null ? "null" : ethWallets.size()) + "ETH wallets");
+//                Log.d(TAG,"get " + (ethWallets == null ? "null" : ethWallets.size()) + "ETH wallets");
             }
         });
 
@@ -318,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 Toast.makeText(MainActivity.this,
-                                        "deleted " + (res == WalletManager.CODE_NO_ERROR ? "success" : "failed"), Toast.LENGTH_SHORT).show();
+                                        "deleted " + res + (res == WalletManager.CODE_NO_ERROR ? " success" : " failed"), Toast.LENGTH_SHORT).show();
                             }
                         });
                     }
@@ -556,13 +566,24 @@ public class MainActivity extends AppCompatActivity {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            final long result = mWalletManager.getBitcoinBalance(address);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mTvBtcBalance.setText("" + result);
-                                }
-                            });
+                            try {
+                                final long result = mWalletManager.getBitcoinBalance(address);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mTvBtcBalance.setText("" + result);
+                                    }
+                                });
+                            } catch (final Exception e) {
+                                //in case of wallet has not been startup
+                                Log.d(TAG, "" + e.toString());
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mTvBtcBalance.setText("" + e.toString());
+                                    }
+                                });
+                            }
                         }
                     }).start();
 
