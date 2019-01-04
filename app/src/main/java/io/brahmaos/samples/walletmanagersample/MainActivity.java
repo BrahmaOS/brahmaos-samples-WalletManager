@@ -18,6 +18,7 @@ import android.widget.Toast;
 import org.w3c.dom.Text;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
@@ -100,11 +101,33 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTvBtcTransaction;
     private Button mBtnBtcTransaction;
 
+    private EditText mEtRateSrc, mEtRateDest;
+    private TextView mTvRate;
+    private Button mBtnGetRate;
+    private String mExpectedRateWei, mMinConversionRateWei;
+
+    private EditText mEtApproveWallet, mEtApproveSrc, mEtApproveAmount, mEtApproveGasPrice;
+    private EditText mEtApproveGasLimit, mEtApprovePassword;
+    private TextView mTvApproveTransaction;
+    private Button mBtnApprove;
+
+    private EditText mEtExchangeWallet, mEtExchangeSrc;
+    private TextView mtvAllowance;
+    private Button mBtnGetAllowance;
+    private EditText mEtExchangeDest, mEtExchangeAmount, mEtExchangeGasPrice, mEtExchangeGasLimit, mEtExchangePassword;
+    private TextView mTvExchangeTransaction;
+    private Button mBtnExchange;
+
     private WalletManager mWalletManager;
     private List<WalletData> mWalletList;
 
     private AppCompatCheckBox mUseTestUrl;
     private static final String ROPSTEN_URL = "https://ropsten.infura.io/Gy3Csyt4bzKIGsctm3g0";
+
+    private static final String BRM_CONTRACT_ADDRESS = "0xd7732e3783b0047aa251928960063f863ad022d8";
+    private static final String KNC_CONTRACT_ADDRESS = "0xdd974d5c2e2928dea5f71b9825b8b646686bd200";
+    private static final String KNC_CONTRACT_TEST_ADDRESS = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6";
+    private static final String KYBER_NETWORK_ETH_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 
     private Map<String, Integer> mMapTxConfirmBlocks = new HashMap<>();//<hash, blocks>
 
@@ -351,8 +374,53 @@ public class MainActivity extends AppCompatActivity {
                             public void run() {
                                 if (null == ethGasPrice || ethGasPrice.isEmpty()) {
                                     mEtGasPrice.setText("error");
+                                    mEtApproveGasPrice.setText("error");
+                                    mEtExchangeGasPrice.setText("error");
                                 } else {
                                     mEtGasPrice.setText(ethGasPrice);
+                                    mEtApproveGasPrice.setText(ethGasPrice);
+                                    mEtExchangeGasPrice.setText(ethGasPrice);
+                                }
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+
+        mEtRateSrc = (EditText) findViewById(R.id.et_rate_src_token);
+        mEtRateDest = (EditText) findViewById(R.id.et_rate_dest_token);
+        mEtRateSrc.setText(KNC_CONTRACT_TEST_ADDRESS);
+        mEtRateDest.setText(KYBER_NETWORK_ETH_ADDRESS);
+        mTvRate = (TextView) findViewById(R.id.tv_rate);
+        mBtnGetRate = (Button) findViewById(R.id.btn_get_rate);
+        mBtnGetRate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mTvRate.setText("");
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final List<String> rateList = mWalletManager.getExpectedRate(
+                                mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
+                                mEtRateSrc.getText().toString(),
+                                mEtRateDest.getText().toString());
+                        if (null == rateList || rateList.size() < 1) {
+                            mExpectedRateWei = null;
+                            mMinConversionRateWei = null;
+                        } else {
+                            mExpectedRateWei = rateList.get(0);
+                            mMinConversionRateWei = rateList.get(1);
+                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (null == mExpectedRateWei || null == mMinConversionRateWei) {
+                                    mTvRate.setText("null");
+                                } else {
+                                    mTvRate.setText(
+                                            new BigDecimal(mExpectedRateWei).divide(new BigDecimal(Math.pow(10, 18))).toPlainString()
+                                                    + "Ether; " + new BigDecimal(mMinConversionRateWei).divide(new BigDecimal(Math.pow(10, 18))).toPlainString() + "Ether");
                                 }
                             }
                         });
@@ -378,10 +446,10 @@ public class MainActivity extends AppCompatActivity {
                         String token = tokenAddr;
                         if (tokenAddr != null) {
                             if ("KNC".equalsIgnoreCase(tokenAddr)) {
-                                token = "0x4E470dc7321E84CA96FcAEDD0C8aBCebbAEB68C6";
+                                token = getKNCContractAddress();
                             }
                             if ("BRM".equalsIgnoreCase(tokenAddr)) {
-                                token = "0xd7732e3783b0047aa251928960063f863ad022d8";
+                                token = BRM_CONTRACT_ADDRESS;
                             }
                         }
                         final String balance = mWalletManager.getEthereumBalanceStringByAddress(
@@ -391,7 +459,7 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mTvBalance.setText("" + balance);
+                                mTvBalance.setText(balance == null ? "null" : (new BigDecimal(balance).divide(new BigDecimal(Math.pow(10, 18))).toPlainString() + "Ether"));
                             }
                         });
                     }
@@ -399,6 +467,129 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        mEtApproveWallet = (EditText) findViewById(R.id.et_approve_wallet);
+        mEtApproveSrc = (EditText) findViewById(R.id.et_approve_src_token);
+        mEtApproveSrc.setText(KNC_CONTRACT_TEST_ADDRESS);
+        mEtApproveAmount = (EditText) findViewById(R.id.et_approve_amount);
+        mEtApproveGasPrice = (EditText) findViewById(R.id.et_approve_gas_price);
+        mEtApproveGasLimit = (EditText) findViewById(R.id.et_approve_gas_limit);
+        mEtApproveGasPrice.setText("20");
+        mEtApproveGasLimit.setText("400000");
+        mEtApprovePassword = (EditText) findViewById(R.id.et_approve_password);
+        mTvApproveTransaction = (TextView) findViewById(R.id.et_approve_hash);
+        mBtnApprove = (Button) findViewById(R.id.btn_approve);
+        mBtnApprove.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            final String hash = mWalletManager.approveKyberNetwork(
+                                    mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
+                                    mEtApproveSrc.getText().toString(),
+                                    Double.valueOf(mEtApproveAmount.getText().toString()).doubleValue(),
+                                    mEtApproveWallet.getText().toString(),
+                                    mEtApprovePassword.getText().toString(),
+                                    new BigDecimal(mEtApproveGasPrice.getText().toString()).doubleValue(),
+                                    new BigInteger(mEtApproveGasLimit.getText().toString()).longValue());
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mTvApproveTransaction.setText(hash == null ? "null" : hash);
+                                }
+                            });
+                        } catch (final Exception e) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mTvApproveTransaction.setText(e.toString());
+                                }
+                            });
+                        }
+                    }
+                }).start();
+            }
+        });
+
+        mEtExchangeWallet = (EditText) findViewById(R.id.et_exchange_wallet);
+        mEtExchangeSrc = (EditText) findViewById(R.id.et_exchange_src_token);
+        mEtExchangeSrc.setText(KNC_CONTRACT_TEST_ADDRESS);
+        mtvAllowance = (TextView) findViewById(R.id.et_exchange_allowance);
+        mBtnGetAllowance = (Button) findViewById(R.id.btn_get_allowance);
+
+        mEtExchangeWallet = (EditText) findViewById(R.id.et_exchange_wallet);
+        mEtExchangeDest = (EditText) findViewById(R.id.et_exchange_dest_token);
+        mEtExchangeDest.setText(KYBER_NETWORK_ETH_ADDRESS);
+        mEtExchangeAmount = (EditText) findViewById(R.id.et_exchange_amount);
+        mEtExchangeGasPrice = (EditText) findViewById(R.id.et_exchange_gas_price);
+        mEtExchangeGasLimit = (EditText) findViewById(R.id.et_exchange_gas_limit);
+        mEtExchangeGasPrice.setText("20");
+        mEtExchangeGasLimit.setText("400000");
+        mEtExchangePassword = (EditText) findViewById(R.id.et_exchange_password);
+        mTvExchangeTransaction =(TextView) findViewById(R.id.tv_exchange_hash);
+        mBtnExchange = (Button) findViewById(R.id.btn_exchange);
+
+        mBtnGetAllowance.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final String allowance = mWalletManager.getContractAllowance(
+                                mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
+                                mEtExchangeWallet.getText().toString(),
+                                mEtExchangeSrc.getText().toString());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mtvAllowance.setText(allowance == null ? "null" : (new BigDecimal(allowance).divide(new BigDecimal(Math.pow(10, 18))).toPlainString() + "Ether"));
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+
+        mBtnExchange.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (null == mExpectedRateWei || null == mMinConversionRateWei) {
+                    mTvExchangeTransaction.setText("please get rate first.");
+                    return;
+                }
+                final double amount = Double.valueOf(mEtExchangeAmount.getText().toString()).doubleValue();
+                final BigInteger maxReceiveAmount =
+                        BigDecimal.valueOf(amount).multiply(new BigDecimal(Math.pow(10, 18))).toBigInteger()
+                                .multiply(new BigInteger(mExpectedRateWei));
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final String hash = mWalletManager.exchangeToken(
+                                mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
+                                mEtExchangeSrc.getText().toString(),
+                                isETHforKyberNetwork(mEtExchangeSrc.getText().toString()),
+                                mEtExchangeDest.getText().toString(),
+                                amount,
+                                mEtExchangeWallet.getText().toString(),
+                                maxReceiveAmount.toString(),
+                                mMinConversionRateWei,
+                                mEtExchangePassword.getText().toString(),
+                                new BigDecimal(mEtExchangeGasPrice.getText().toString()).doubleValue(),
+                                new BigInteger(mEtExchangeGasLimit.getText().toString()).longValue());
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mTvExchangeTransaction.setText(null == hash ? "null" : hash);
+                            }
+                        });
+                    }
+                }).start();
+            }
+        });
+
+
 
         mEtEtcHash = (TextView) findViewById(R.id.et_etc_hash);
         mEtKncHash = (TextView) findViewById(R.id.et_knc_hash);
@@ -415,14 +606,17 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             if (null == ethGasPrice || ethGasPrice.isEmpty()) {
                                 mEtGasPrice.setText("error");
+                                mEtApproveGasPrice.setText("error");
+                                mEtExchangeGasPrice.setText("error");
                             } else {
                                 mEtGasPrice.setText(ethGasPrice);
+                                mEtApproveGasPrice.setText(ethGasPrice);
+                                mEtExchangeGasPrice.setText(ethGasPrice);
                             }
                         }
                     });
             }
         }).start();
-
 
         mEtGasPrice.setText("20");
         mEtGasLimit.setText("400000");
@@ -438,10 +632,10 @@ public class MainActivity extends AppCompatActivity {
                         //ETH ropsten
                         final String etcHash = mWalletManager.transferEthereum(
                                 mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
-                                "0x4029a7e31ae310479784e9ade9e3172698807341",
+                                "0x62461ec66ea7014833181e8e22a8e64f40de34ec",
                                 "",
                                 "qqqqqq",
-                                "0x62461ec66ea7014833181e8e22a8e64f40de34ec",
+                                "0x4029a7e31ae310479784e9ade9e3172698807341",
                                 0.1,
                                  new BigInteger(mEtGasPrice.getText().toString().trim()).doubleValue(),
                                  Long.valueOf(mEtGasLimit.getText().toString().trim()),
@@ -686,6 +880,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private String getKNCContractAddress() {
+        return mUseTestUrl.isChecked() ? KNC_CONTRACT_TEST_ADDRESS : KNC_CONTRACT_ADDRESS;
+    }
+
+    private boolean isETHforKyberNetwork(String src) {
+        return KYBER_NETWORK_ETH_ADDRESS.equals(src) ? true : false;
+    }
 
     @Override
     protected void onDestroy() {
