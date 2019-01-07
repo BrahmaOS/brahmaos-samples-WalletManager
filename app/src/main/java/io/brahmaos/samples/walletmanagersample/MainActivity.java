@@ -569,7 +569,6 @@ public class MainActivity extends AppCompatActivity {
                         final String hash = mWalletManager.exchangeToken(
                                 mUseTestUrl.isChecked() ? ROPSTEN_URL : null,
                                 mEtExchangeSrc.getText().toString(),
-                                isETHforKyberNetwork(mEtExchangeSrc.getText().toString()),
                                 mEtExchangeDest.getText().toString(),
                                 amount,
                                 mEtExchangeWallet.getText().toString(),
